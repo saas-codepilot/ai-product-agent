@@ -1,1 +1,1 @@
-export const config = { port: Number(process.env.API_PORT ?? 4000), webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000', nodeEnv: process.env.NODE_ENV ?? 'development' };
+export const config = { port: Number(process.env.API_PORT ?? 4000), webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000', nodeEnv: process.env.NODE_ENV ?? 'development', databaseUrl: process.env.DATABASE_URL, devAuthBypass: process.env.DEV_AUTH_BYPASS !== 'false', researchProvider: process.env.RESEARCH_PROVIDER ?? 'wikimedia' };

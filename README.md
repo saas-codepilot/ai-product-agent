@@ -9,7 +9,18 @@ pnpm install
 pnpm dev
 ```
 
-The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. The development API intentionally uses an in-memory store and a deterministic research provider until database, AI, storage, and Shopify credentials are configured.
+The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. Without `DATABASE_URL`, the API uses an explicit development-only memory repository; with PostgreSQL configured it switches to Prisma persistence. The default research adapter is Wikimedia Commons, a public no-key source, and returns only normalized source-backed media results.
+
+## PostgreSQL
+
+Install PostgreSQL locally, create `ai_product_agent`, copy `.env.example` to `.env`, set `DATABASE_URL`, then run:
+
+```bash
+pnpm --filter @ai-product-agent/database prisma:generate
+pnpm --filter @ai-product-agent/database prisma:migrate
+```
+
+The API then reports `storage: postgres` from `/api/health`. `DEV_AUTH_BYPASS=true` is for local development only; production must provide authenticated `x-user-id` and `x-workspace-id` through a real session layer.
 
 ## Quality checks
 

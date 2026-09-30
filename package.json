@@ -6,7 +6,7 @@
     "dev:api": "pnpm --filter @ai-product-agent/api dev",
     "dev:web": "pnpm --filter @ai-product-agent/web dev",
     "typecheck": "pnpm --recursive typecheck",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node tests/contract.mjs",
     "build": "pnpm --recursive build"
   },
   "packageManager": "pnpm@11.19.0",

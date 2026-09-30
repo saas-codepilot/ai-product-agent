@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum ProductStatus {
+  uploaded
+  researching
+  needs_review
+  confirmed
+  listing_ready
+}
+enum JobStatus {
+  queued
+  processing
+  completed
+  failed
+}
+enum VerificationStatus {
+  verified
+  inferred
+  user_confirmed
+}
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  auditLogs AuditLog[]
+}
+model Workspace {
+  id String @id @default(cuid())
+  name String
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  products Product[]
+  auditLogs AuditLog[]
+}
+model Membership {
+  userId String
+  workspaceId String
+  role String @default("owner")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@id([userId, workspaceId])
+}
+model Product {
+  id String @id @default(cuid())
+  workspaceId String
+  status ProductStatus @default(uploaded)
+  confirmedCandidateId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  images ProductImage[]
+  clues ProductAttribute[]
+  researchJobs ResearchJob[]
+  candidates ResearchCandidate[]
+  listing ProductListing?
+  audits AuditLog[]
+  @@index([workspaceId, createdAt])
+}
+model ProductImage {
+  id String @id @default(cuid())
+  productId String
+  name String
+  mimeType String
+  size Int
+  createdAt DateTime @default(now())
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+model ProductAttribute {
+  id String @id @default(cuid())
+  productId String
+  name String
+  value String
+  status VerificationStatus
+  method String?
+  confidence Float?
+  evidenceJson Json?
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@index([productId])
+}
+model ResearchJob {
+  id String @id @default(cuid())
+  productId String
+  status JobStatus @default(queued)
+  provider String?
+  queryJson Json?
+  error String?
+  attempts Int @default(0)
+  queuedAt DateTime @default(now())
+  startedAt DateTime?
+  completedAt DateTime?
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  candidates ResearchCandidate[]
+  @@index([productId, queuedAt])
+}
+model ResearchCandidate {
+  id String @id @default(cuid())
+  productId String
+  researchJobId String
+  title String
+  sourceName String
+  sourceUrl String
+  productUrl String?
+  imageUrl String?
+  price Float?
+  currency String?
+  brand String?
+  specifications Json
+  matchingSignals Json
+  confidence Float
+  status VerificationStatus @default(verified)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  researchJob ResearchJob @relation(fields: [researchJobId], references: [id], onDelete: Cascade)
+  evidence Evidence[]
+  @@index([productId, confidence])
+}
+model Evidence {
+  id String @id @default(cuid())
+  candidateId String
+  sourceName String
+  sourceUrl String
+  excerpt String?
+  capturedAt DateTime @default(now())
+  candidate ResearchCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+}
+model ProductListing {
+  id String @id @default(cuid())
+  productId String @unique
+  generatedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fields ListingField[]
+  generations Generation[]
+}
+model ListingField {
+  id String @id @default(cuid())
+  listingId String
+  name String
+  generatedValue String
+  editedValue String?
+  status String @default("generated")
+  generationId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listing ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  generation Generation? @relation(fields: [generationId], references: [id], onDelete: SetNull)
+  @@unique([listingId, name])
+}
+model Generation {
+  id String @id @default(cuid())
+  listingId String
+  fieldName String
+  provider String?
+  model String?
+  instruction String?
+  createdAt DateTime @default(now())
+  listing ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  fields ListingField[]
+}
+model AuditLog {
+  id String @id @default(cuid())
+  workspaceId String
+  userId String?
+  productId String?
+  action String
+  metadata Json?
+  createdAt DateTime @default(now())
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  @@index([workspaceId, createdAt])
+}

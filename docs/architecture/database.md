@@ -1,3 +1,3 @@
 # Database foundation
 
-The intended normalized model centers on Workspace, Product, ProductImage, ResearchJob, ResearchCandidate, Listing, ListingField, ShopifyStore, PublishJob, and AuditLog. The current in-memory store mirrors these boundaries so persistence can be introduced without changing API contracts.
+Prisma models Workspace, User, Membership, Product, ProductImage, ProductAttribute, ResearchJob, ResearchCandidate, Evidence, ProductListing, ListingField, Generation, and AuditLog. Every product query is scoped by `workspaceId`; the Prisma repository is the only application boundary that issues database calls. The memory repository remains a test/local fallback when no `DATABASE_URL` is supplied.
