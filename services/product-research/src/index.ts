@@ -6,6 +6,7 @@ export class DevelopmentResearchProvider implements ResearchProvider {
   async search(_clues: ProductClues): Promise<Candidate[]> { return []; }
 }
 export { WikimediaCommonsProvider } from './wikimedia.ts';
+export { rankCandidates } from './matching.ts';
 export function createResearchQuery(clues: ProductClues): string[] {
   return [clues.brand, clues.model, clues.productType, ...clues.visibleText, ...clues.distinctiveCharacteristics].filter(Boolean) as string[];
 }

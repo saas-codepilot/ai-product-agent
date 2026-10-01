@@ -10,6 +10,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@ai-product-agent/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@ai-product-agent/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -60,6 +63,12 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/ai:
+    dependencies:
+      '@ai-product-agent/types':
+        specifier: workspace:*
+        version: link:../types
 
   packages/config: {}
 
