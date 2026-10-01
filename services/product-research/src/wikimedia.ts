@@ -5,6 +5,7 @@ type SearchResponse={query?:{search?:Array<{pageid:number;title:string;snippet?:
 type InfoResponse={query?:{pages?:Record<string,{imageinfo?:Array<{url?:string;descriptionurl?:string;extmetadata?:Record<string,{value?:string}>}>}>}};
 export class WikimediaCommonsProvider implements ResearchProvider {
  readonly name='wikimedia-commons';
+ readonly kind='public-api' as const;
  async search(clues:ProductClues):Promise<Candidate[]> {
   const query=[clues.brand,clues.model,clues.productType,...clues.visibleText].filter(Boolean).join(' ').trim();
   if(!query)return [];
@@ -13,6 +14,6 @@ export class WikimediaCommonsProvider implements ResearchProvider {
   const hits=search.query?.search??[]; if(!hits.length)return [];
   const infoParams=new URLSearchParams({action:'query',pageids:hits.map(h=>String(h.pageid)).join('|'),prop:'imageinfo',iiprop:'url|extmetadata',format:'json',origin:'*'});
   const info=await fetch(`https://commons.wikimedia.org/w/api.php?${infoParams}`).then(r=>r.json() as Promise<InfoResponse>);
-  return hits.map((hit,index)=>{const meta=info.query?.pages?.[String(hit.pageid)]?.imageinfo?.[0];const source=`https://commons.wikimedia.org/wiki/${encodeURIComponent(hit.title.replaceAll(' ','_'))}`;const excerpt=meta?.extmetadata?.ImageDescription?.value?.replace(/<[^>]+>/g,'').slice(0,500)??hit.snippet?.replace(/<[^>]+>/g,'');return {id:crypto.randomUUID(),title:hit.title.replace(/^File:/,''),sourceName:'Wikimedia Commons',sourceUrl:source,productUrl:source,imageUrl:meta?.url,specifications:{},matchingSignals:[`Matched query terms: ${query}`],confidence:Math.max(35,60-index*5),status:'verified',evidence:[{sourceName:'Wikimedia Commons',sourceUrl:source,excerpt,capturedAt:new Date().toISOString()}]};});
+  return hits.map((hit,index)=>{const meta=info.query?.pages?.[String(hit.pageid)]?.imageinfo?.[0];const source=`https://commons.wikimedia.org/wiki/${encodeURIComponent(hit.title.replaceAll(' ','_'))}`;const excerpt=meta?.extmetadata?.ImageDescription?.value?.replace(/<[^>]+>/g,'').slice(0,500)??hit.snippet?.replace(/<[^>]+>/g,'');return {id:crypto.randomUUID(),title:hit.title.replace(/^File:/,''),sourceName:'Wikimedia Commons',sourceUrl:source,productUrl:source,imageUrl:meta?.url,provider:this.name,providerProductId:String(hit.pageid),specifications:{},matchingSignals:[`Matched query terms: ${query}`],confidence:Math.max(35,60-index*5),status:'verified',evidence:[{sourceName:'Wikimedia Commons',sourceUrl:source,excerpt,capturedAt:new Date().toISOString()}]};});
  }
 }

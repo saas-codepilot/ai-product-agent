@@ -22,6 +22,9 @@ importers:
       '@ai-product-agent/product-research':
         specifier: workspace:*
         version: link:../../services/product-research
+      '@ai-product-agent/shopify':
+        specifier: workspace:*
+        version: link:../../packages/shopify
       '@ai-product-agent/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -87,6 +90,12 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/shopify:
+    dependencies:
+      '@ai-product-agent/types':
+        specifier: workspace:*
+        version: link:../types
 
   packages/types: {}
 

@@ -29,6 +29,8 @@ model User {
   createdAt DateTime @default(now())
   memberships Membership[]
   auditLogs AuditLog[]
+  shopifyConnections ShopifyConnection[]
+  publishAttempts PublishAttempt[]
 }
 model Workspace {
   id String @id @default(cuid())
@@ -60,6 +62,7 @@ model Product {
   candidates ResearchCandidate[]
   listing ProductListing?
   audits AuditLog[]
+  publishAttempts PublishAttempt[]
   @@index([workspaceId, createdAt])
 }
 model ProductImage {
@@ -174,4 +177,49 @@ model AuditLog {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   @@index([workspaceId, createdAt])
+}
+model ShopifyConnection {
+  id String @id @default(cuid())
+  workspaceId String
+  shop String
+  encryptedAccessToken String
+  scopes Json
+  status String @default("connected")
+  connectedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  publishAttempts PublishAttempt[]
+  @@unique([workspaceId, shop])
+  @@index([workspaceId, status])
+}
+model PublishAttempt {
+  id String @id @default(cuid())
+  workspaceId String
+  productId String
+  listingId String
+  connectionId String?
+  idempotencyKey String
+  status String
+  providerProductId String?
+  providerUrl String?
+  error String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  connection ShopifyConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  @@unique([workspaceId, idempotencyKey])
+  @@index([workspaceId, productId, status])
+}
+model OAuthState {
+  id String @id @default(cuid())
+  workspaceId String
+  userId String
+  shop String
+  stateHash String @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([workspaceId, expiresAt])
 }

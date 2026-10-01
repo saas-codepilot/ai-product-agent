@@ -1,0 +1,1 @@
+{"name":"@ai-product-agent/shopify","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"},"dependencies":{"@ai-product-agent/types":"workspace:*"}}

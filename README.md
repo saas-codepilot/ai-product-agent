@@ -29,4 +29,6 @@ pnpm test
 pnpm typecheck
 ```
 
-See [system architecture](docs/architecture/system-architecture.md), [product specification](docs/product/product-spec.md), and [security notes](SECURITY.md).
+Shopify uses the Admin GraphQL API behind a server-side provider boundary. Set `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, and `SHOPIFY_REDIRECT_URI` for a real app. For local end-to-end flow only, `SHOPIFY_MODE=development` enables a non-network mock provider; it never represents a production store. OAuth state, shop validation, workspace ownership, preview, explicit publish, and idempotency are enforced by the API. Tokens are never returned to the browser.
+
+See [system architecture](docs/architecture/system-architecture.md), [research engine](docs/architecture/research-engine.md), [Shopify integration](docs/architecture/shopify-integration.md), [publishing pipeline](docs/architecture/publishing-pipeline.md), [product specification](docs/product/product-spec.md), and [security notes](SECURITY.md).
