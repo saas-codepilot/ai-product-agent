@@ -75,8 +75,11 @@ model ProductImage {
   storageKey String?
   width Int?
   height Int?
+  checksum String?
+  variant String @default("original")
   createdAt DateTime @default(now())
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([productId, variant])
 }
 model ProductAttribute {
   id String @id @default(cuid())

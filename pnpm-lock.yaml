@@ -85,7 +85,11 @@ importers:
         specifier: workspace:*
         version: link:../types
 
-  packages/auth: {}
+  packages/auth:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.4
 
   packages/config: {}
 
@@ -109,7 +113,11 @@ importers:
 
   packages/media: {}
 
-  packages/security: {}
+  packages/security:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.20.4
 
   packages/shopify:
     dependencies:

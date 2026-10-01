@@ -1,1 +1,1 @@
-{"name":"@ai-product-agent/media","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"}}
+{"name":"@ai-product-agent/media","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"},"dependencies":{"sharp":"^0.35.5"},"devDependencies":{"@types/node":"^22.10.5"}}
