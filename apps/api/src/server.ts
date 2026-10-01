@@ -1,24 +1,36 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { config } from '@ai-product-agent/config';
+import { config, validateRuntimeConfig } from '@ai-product-agent/config';
+import { SessionService, sessionCookie } from '@ai-product-agent/auth';
+import { InMemoryJobQueue } from '@ai-product-agent/jobs';
+import { RateLimiter } from '@ai-product-agent/security';
 import { createAIProvider, type ImageInput } from '@ai-product-agent/ai';
 import { MemoryProductRepository, PrismaProductRepository, type AuthScope, type ProductRepository } from '@ai-product-agent/database';
 import { DevelopmentResearchProvider, WikimediaCommonsProvider, MultiProviderResearchService, createResearchQuery, rankCandidates } from '@ai-product-agent/product-research';
 import { DevelopmentShopifyProvider, ShopifyGraphQLProvider, normalizeShopDomain, type ShopifyConnection, type ShopifyProvider } from '@ai-product-agent/shopify';
 import { normalizeClues, validateImages } from '@ai-product-agent/validation';
 import type { ListingFieldName } from '@ai-product-agent/types';
+validateRuntimeConfig();
+if(config.isProduction&&!config.openAiConfigured)throw new Error('OPENAI_API_KEY is required in production.');
 const repository:ProductRepository=config.databaseUrl?new PrismaProductRepository():new MemoryProductRepository();
 const research=new MultiProviderResearchService([config.researchProvider==='wikimedia'?new WikimediaCommonsProvider():new DevelopmentResearchProvider()]);
 const ai=createAIProvider();
 const shopify:ShopifyProvider=config.shopifyMode==='development'?new DevelopmentShopifyProvider():config.shopifyClientId&&config.shopifyClientSecret?new ShopifyGraphQLProvider(config.shopifyClientId,config.shopifyClientSecret):new DevelopmentShopifyProvider();
-const connections=new Map<string,ShopifyConnection & {accessToken?:string}>(); const oauthStates=new Map<string,{workspaceId:string;userId:string;shop:string;expires:number}>(); const publishes=new Map<string,any>();
+const connections=new Map<string,ShopifyConnection & {accessToken?:string}>(); const oauthStates=new Map<string,{workspaceId:string;userId:string;shop:string;expires:number}>(); const publishes=new Map<string,any>(); const sessions=new SessionService(config.sessionTtlMs); const jobs=new InMemoryJobQueue(); const limiter=new RateLimiter(60000,30);
 const json=(res:ServerResponse,status:number,body:unknown)=>{res.writeHead(status,{'content-type':'application/json','access-control-allow-origin':config.webOrigin,'access-control-allow-headers':'content-type,x-user-id,x-workspace-id','access-control-allow-methods':'GET,POST,PATCH,OPTIONS'});res.end(JSON.stringify(body));};
 async function body(req:IncomingMessage){let raw='';for await(const chunk of req)raw+=chunk;return raw?JSON.parse(raw):{};}
-function auth(req:IncomingMessage):AuthScope|undefined{const userId=req.headers['x-user-id']?.toString();const workspaceId=req.headers['x-workspace-id']?.toString();if(userId&&workspaceId)return{userId,workspaceId};if(config.devAuthBypass)return{userId:'dev-user',workspaceId:'dev-workspace'};return undefined;}
+function cookies(req:IncomingMessage){return Object.fromEntries((req.headers.cookie??'').split(';').map(x=>x.trim().split('=' as any)).filter(x=>x.length===2));}
+function auth(req:IncomingMessage):AuthScope|undefined{const session=sessions.get(cookies(req).sid);if(session)return{userId:session.userId,workspaceId:session.workspaceId};if(config.devAuthBypass&&!config.isProduction)return{userId:'dev-user',workspaceId:'dev-workspace'};return undefined;}
 function audit(_scope:AuthScope,_action:string,_productId?:string,_metadata?:Record<string,unknown>){return;}
 async function handler(req:IncomingMessage,res:ServerResponse){if(req.method==='OPTIONS')return json(res,204,{});const url=new URL(req.url??'/',`http://${req.headers.host??'localhost'}`);try{
- if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,environment:config.nodeEnv,storage:repository.storage,researchProvider:'multi-source',aiProvider:ai.name,shopifyProvider:shopify.name,shopifyConfiguration:config.shopifyMode==='unconfigured'?'SHOPIFY_NOT_CONFIGURED':'configured',auth:'workspace-scoped'});
+ if((req.method==='POST'&&(url.pathname==='/api/auth/login'||url.pathname==='/api/auth/register'))&&!limiter.allow(`auth:${req.socket.remoteAddress??'unknown'}`))return json(res,429,{error:'Too many authentication attempts.',code:'RATE_LIMITED'});
+ if(req.method==='POST'&&url.pathname==='/api/auth/register'){const input=await body(req);try{const user=sessions.register(String(input.email),String(input.password),String(input.workspaceId||'local-workspace'));return json(res,201,user);}catch(e){return json(res,400,{error:(e as Error).message});}}
+ if(req.method==='POST'&&url.pathname==='/api/auth/login'){const input=await body(req);try{const session=sessions.login(String(input.email),String(input.password));res.setHeader('set-cookie',sessionCookie(session.id));return json(res,200,{userId:session.userId,workspaceId:session.workspaceId,role:session.role,expiresAt:session.expiresAt});}catch(e){return json(res,401,{error:(e as Error).message,code:'INVALID_CREDENTIALS'});}}
+ if(req.method==='POST'&&url.pathname==='/api/auth/logout'){sessions.logout(cookies(req).sid);res.setHeader('set-cookie',sessionCookie('',0));return json(res,200,{ok:true});}
+ if(req.method==='GET'&&url.pathname==='/api/auth/me'){const s=sessions.get(cookies(req).sid);return s?json(res,200,{userId:s.userId,workspaceId:s.workspaceId,role:s.role,expiresAt:s.expiresAt}):json(res,401,{error:'Authentication required.',code:'AUTH_REQUIRED'});}
+ if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,environment:config.nodeEnv,storage:repository.storage,researchProvider:'multi-source',aiProvider:ai.name,aiConfigured:config.openAiConfigured,shopifyProvider:shopify.name,shopifyConfiguration:config.shopifyMode==='unconfigured'?'SHOPIFY_NOT_CONFIGURED':'configured',auth:'workspace-scoped'});
  const scope=auth(req);if(!scope)return json(res,401,{error:'Authentication required.',code:'AUTH_REQUIRED'});
+ if(['POST'].includes(req.method??'')&&!limiter.allow(`${scope.workspaceId}:${url.pathname}`))return json(res,429,{error:'Rate limit exceeded. Retry shortly.',code:'RATE_LIMITED'});
  if(req.method==='POST'&&url.pathname==='/api/products'){const input=await body(req);const product=await repository.create(scope,validateImages(input.images),normalizeClues(input.clues));return json(res,201,product);}
  const productMatch=url.pathname.match(/^\/api\/products\/([^/]+)$/);if(req.method==='GET'&&productMatch){const product=await repository.get(scope,productMatch[1]);return product?json(res,200,product):json(res,404,{error:'Product not found'});}
  const analyze=url.pathname.match(/^\/api\/products\/([^/]+)\/analyze$/);if(req.method==='POST'&&analyze){const product=await repository.get(scope,analyze[1]);if(!product)return json(res,404,{error:'Product not found'});try{const input=await body(req);const analysis=await ai.analyzeImages((input.images??[]).map((i:any)=>({name:String(i.name),mimeType:String(i.mimeType),dataUrl:i.dataUrl})) as ImageInput[]);const saved=await repository.saveAnalysis(scope,product.id,analysis as any);audit(scope,'visual_analysis_completed',product.id);return json(res,200,{product:saved,analysis,status:'completed'});}catch{return json(res,502,{error:'AI analysis unavailable.',code:'AI_PROVIDER_ERROR'});}}

@@ -1,0 +1,1 @@
+{"name":"@ai-product-agent/security","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"},"devDependencies":{"@types/node":"^22.10.5"}}

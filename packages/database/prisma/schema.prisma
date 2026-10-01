@@ -63,6 +63,7 @@ model Product {
   listing ProductListing?
   audits AuditLog[]
   publishAttempts PublishAttempt[]
+  usageRecords UsageRecord[]
   @@index([workspaceId, createdAt])
 }
 model ProductImage {
@@ -71,6 +72,9 @@ model ProductImage {
   name String
   mimeType String
   size Int
+  storageKey String?
+  width Int?
+  height Int?
   createdAt DateTime @default(now())
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
@@ -117,10 +121,14 @@ model ResearchCandidate {
   matchingSignals Json
   confidence Float
   status VerificationStatus @default(verified)
+  provider String?
+  providerProductId String?
+  providerMetadata Json?
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   researchJob ResearchJob @relation(fields: [researchJobId], references: [id], onDelete: Cascade)
   evidence Evidence[]
   @@index([productId, confidence])
+  @@index([productId, provider, providerProductId])
 }
 model Evidence {
   id String @id @default(cuid())
@@ -222,4 +230,22 @@ model OAuthState {
   consumedAt DateTime?
   createdAt DateTime @default(now())
   @@index([workspaceId, expiresAt])
+}
+model UsageRecord {
+  id String @id @default(cuid())
+  workspaceId String
+  userId String?
+  productId String?
+  jobId String?
+  operation String
+  provider String?
+  model String?
+  inputTokens Int?
+  outputTokens Int?
+  imageCount Int?
+  durationMs Int?
+  estimatedCostUsd Float?
+  createdAt DateTime @default(now())
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId, createdAt])
 }

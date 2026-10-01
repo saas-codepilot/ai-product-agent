@@ -9,7 +9,7 @@ pnpm install
 pnpm dev
 ```
 
-The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. Without `DATABASE_URL`, the API uses an explicit development-only memory repository; with PostgreSQL configured it switches to Prisma persistence. The default research adapter is Wikimedia Commons, a public no-key source, and returns only normalized source-backed media results.
+The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. Without `DATABASE_URL`, the API uses an explicit development-only memory repository; with PostgreSQL configured it switches to Prisma persistence. Production startup rejects missing `DATABASE_URL`, enabled auth bypass, or missing `OPENAI_API_KEY`. The default research adapter is Wikimedia Commons, a public no-key source, and returns only normalized source-backed media results.
 
 ## PostgreSQL
 
@@ -32,3 +32,5 @@ pnpm typecheck
 Shopify uses the Admin GraphQL API behind a server-side provider boundary. Set `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`, and `SHOPIFY_REDIRECT_URI` for a real app. For local end-to-end flow only, `SHOPIFY_MODE=development` enables a non-network mock provider; it never represents a production store. OAuth state, shop validation, workspace ownership, preview, explicit publish, and idempotency are enforced by the API. Tokens are never returned to the browser.
 
 See [system architecture](docs/architecture/system-architecture.md), [research engine](docs/architecture/research-engine.md), [Shopify integration](docs/architecture/shopify-integration.md), [publishing pipeline](docs/architecture/publishing-pipeline.md), [product specification](docs/product/product-spec.md), and [security notes](SECURITY.md).
+
+Local auth endpoints are `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout`. Set `DATABASE_URL` and run Prisma migrations for persistent data. The local job, media, and session ports are deterministic fallbacks; use Redis/object storage and a persistent session store before a production deployment.

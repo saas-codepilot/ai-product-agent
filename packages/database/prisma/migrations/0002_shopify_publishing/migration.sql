@@ -21,3 +21,9 @@ ALTER TABLE "ShopifyConnection" ADD CONSTRAINT "ShopifyConnection_workspaceId_fk
 ALTER TABLE "PublishAttempt" ADD CONSTRAINT "PublishAttempt_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "PublishAttempt" ADD CONSTRAINT "PublishAttempt_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "PublishAttempt" ADD CONSTRAINT "PublishAttempt_connectionId_fkey" FOREIGN KEY ("connectionId") REFERENCES "ShopifyConnection"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ProductImage" ADD COLUMN "storageKey" TEXT, ADD COLUMN "width" INTEGER, ADD COLUMN "height" INTEGER;
+ALTER TABLE "ResearchCandidate" ADD COLUMN "provider" TEXT, ADD COLUMN "providerProductId" TEXT, ADD COLUMN "providerMetadata" JSONB;
+CREATE INDEX "ResearchCandidate_productId_provider_providerProductId_idx" ON "ResearchCandidate"("productId","provider","providerProductId");
+CREATE TABLE "UsageRecord" ("id" TEXT NOT NULL, "workspaceId" TEXT NOT NULL, "userId" TEXT, "productId" TEXT, "jobId" TEXT, "operation" TEXT NOT NULL, "provider" TEXT, "model" TEXT, "inputTokens" INTEGER, "outputTokens" INTEGER, "imageCount" INTEGER, "durationMs" INTEGER, "estimatedCostUsd" DOUBLE PRECISION, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "UsageRecord_pkey" PRIMARY KEY ("id"));
+CREATE INDEX "UsageRecord_workspaceId_createdAt_idx" ON "UsageRecord"("workspaceId","createdAt");
+ALTER TABLE "UsageRecord" ADD CONSTRAINT "UsageRecord_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;

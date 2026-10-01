@@ -13,15 +13,27 @@ importers:
       '@ai-product-agent/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@ai-product-agent/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@ai-product-agent/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@ai-product-agent/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ai-product-agent/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
+      '@ai-product-agent/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@ai-product-agent/product-research':
         specifier: workspace:*
         version: link:../../services/product-research
+      '@ai-product-agent/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@ai-product-agent/shopify':
         specifier: workspace:*
         version: link:../../packages/shopify
@@ -73,6 +85,8 @@ importers:
         specifier: workspace:*
         version: link:../types
 
+  packages/auth: {}
+
   packages/config: {}
 
   packages/database:
@@ -90,6 +104,12 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/jobs: {}
+
+  packages/media: {}
+
+  packages/security: {}
 
   packages/shopify:
     dependencies:
