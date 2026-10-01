@@ -29,8 +29,6 @@ model User {
   createdAt DateTime @default(now())
   memberships Membership[]
   auditLogs AuditLog[]
-  shopifyConnections ShopifyConnection[]
-  publishAttempts PublishAttempt[]
 }
 model Workspace {
   id String @id @default(cuid())
@@ -39,6 +37,10 @@ model Workspace {
   memberships Membership[]
   products Product[]
   auditLogs AuditLog[]
+  shopifyConnections ShopifyConnection[]
+  publishAttempts PublishAttempt[]
+  usageRecords UsageRecord[]
+  jobs AppJob[]
 }
 model Membership {
   userId String
@@ -63,8 +65,8 @@ model Product {
   listing ProductListing?
   audits AuditLog[]
   publishAttempts PublishAttempt[]
-  usageRecords UsageRecord[]
   jobs AppJob[]
+  usageRecords UsageRecord[]
   @@index([workspaceId, createdAt])
 }
 model ProductImage {
@@ -186,8 +188,8 @@ model AuditLog {
   metadata Json?
   createdAt DateTime @default(now())
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   @@index([workspaceId, createdAt])
 }
 model ShopifyConnection {
@@ -210,6 +212,7 @@ model PublishAttempt {
   productId String
   listingId String
   connectionId String?
+  jobId String?
   idempotencyKey String
   status String
   providerProductId String?
@@ -221,6 +224,7 @@ model PublishAttempt {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   connection ShopifyConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  job AppJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
   @@unique([workspaceId, idempotencyKey])
   @@index([workspaceId, productId, status])
 }
@@ -251,6 +255,7 @@ model UsageRecord {
   estimatedCostUsd Float?
   createdAt DateTime @default(now())
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   @@index([workspaceId, createdAt])
 }
 model AppJob {
@@ -264,12 +269,19 @@ model AppJob {
   attempts Int @default(0)
   maxAttempts Int @default(3)
   error String?
+  errorCategory String?
+  provider String?
+  result Json?
+  leaseOwner String?
+  leaseUntil DateTime?
   createdAt DateTime @default(now())
   startedAt DateTime?
   completedAt DateTime?
+  durationMs Int?
   updatedAt DateTime @updatedAt
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  publishAttempts PublishAttempt[]
   @@unique([workspaceId, idempotencyKey])
   @@index([workspaceId, status, createdAt])
 }
