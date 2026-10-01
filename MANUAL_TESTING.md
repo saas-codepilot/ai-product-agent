@@ -1,3 +1,19 @@
+# Browser workflow and Milestone 11 QA record
+
+## Automated/runtime execution record — 2026-10-01
+
+- **PASS** API registration issued an `HttpOnly` session cookie; invalid login returned `401` without sensitive detail.
+- **PASS** API logout invalidated the session; `/api/auth/me` returned `401` afterward.
+- **PASS** API product creation and deterministic development AI analysis completed.
+- **PASS** API no-match research state rendered correctly with the permitted Wikimedia provider returning zero candidates.
+- **PASS** Workspace isolation returned `404` when Workspace B requested Workspace A’s product.
+- **PASS** API Shopify development connection flow completed.
+- **BLOCKED** Browser workflow — Next.js could not start because the Windows sandbox rejected child-process creation with `spawn EPERM`.
+- **BLOCKED** Real PostgreSQL/Redis worker lifecycle — Docker is unavailable in the environment.
+- **BLOCKED** Candidate confirmation, listing editor, media-worker variants, and publish result in the browser — dependent on the blocked web runtime and/or a real research candidate.
+
+The checklist below is the exact human browser procedure. It is not marked complete by the automated API checks above.
+
 # Milestone 10 browser workflow
 
 Run the API and web app in development mode. Use a development Shopify store when testing publishing. Each checkbox is intentionally left unchecked until a human completes the action in a browser.
