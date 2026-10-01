@@ -64,6 +64,7 @@ model Product {
   audits AuditLog[]
   publishAttempts PublishAttempt[]
   usageRecords UsageRecord[]
+  jobs AppJob[]
   @@index([workspaceId, createdAt])
 }
 model ProductImage {
@@ -251,4 +252,24 @@ model UsageRecord {
   createdAt DateTime @default(now())
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   @@index([workspaceId, createdAt])
+}
+model AppJob {
+  id String @id @default(cuid())
+  workspaceId String
+  productId String?
+  type String
+  idempotencyKey String
+  status String @default("queued")
+  payload Json
+  attempts Int @default(0)
+  maxAttempts Int @default(3)
+  error String?
+  createdAt DateTime @default(now())
+  startedAt DateTime?
+  completedAt DateTime?
+  updatedAt DateTime @updatedAt
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@unique([workspaceId, idempotencyKey])
+  @@index([workspaceId, status, createdAt])
 }

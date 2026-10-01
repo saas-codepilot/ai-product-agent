@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "pnpm --parallel --filter @ai-product-agent/api --filter @ai-product-agent/web dev",
     "dev:api": "pnpm --filter @ai-product-agent/api dev",
+    "dev:worker": "pnpm --filter @ai-product-agent/worker dev",
     "dev:web": "pnpm --filter @ai-product-agent/web dev",
     "typecheck": "pnpm --recursive typecheck",
     "test": "node tests/contract.mjs",

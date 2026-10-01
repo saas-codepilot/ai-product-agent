@@ -1,1 +1,1 @@
-{"name":"@ai-product-agent/jobs","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"}}
+{"name":"@ai-product-agent/jobs","private":true,"type":"module","exports":{".":"./src/index.ts","./redis":"./src/redis.ts","./worker":"./src/worker.ts"},"scripts":{"typecheck":"tsc --noEmit","build":"tsc --noEmit"},"dependencies":{"ioredis":"^5.4.1"},"devDependencies":{"@types/node":"^22.10.5"}}
