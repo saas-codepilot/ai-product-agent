@@ -14,6 +14,44 @@
 
 The checklist below is the exact human browser procedure. It is not marked complete by the automated API checks above.
 
+## Startup commands
+
+Development fallback (no Docker, PostgreSQL, or Redis):
+
+```powershell
+$env:DEV_AUTH_BYPASS="false"
+$env:SHOPIFY_MODE="development"
+pnpm dev:api
+pnpm dev:web
+```
+
+Open `http://localhost:3000`. The API health endpoint is `http://localhost:4000/api/health`.
+
+Persistent integration mode:
+
+```powershell
+pnpm infra:up
+pnpm test:integration:full
+pnpm dev:api
+pnpm dev:worker
+pnpm dev:web
+```
+
+Automated browser tests use real Playwright interactions and the web server command:
+
+```powershell
+pnpm test:e2e
+```
+
+The suite covers desktop, tablet, and mobile projects. It requires a working Next.js server and the Playwright browser binaries. `pnpm test:integration:full` exits with an explicit environment-blocked message when Docker is unavailable; it never reports a false pass.
+
+## Test categories
+
+- **MANUAL:** the browser checklist below, to be run by a human when the web runtime is available.
+- **AUTOMATED BROWSER E2E:** `pnpm test:e2e`, using Playwright and accessible browser controls.
+- **API/UNIT:** TypeScript checks, contract tests, and API fallback smoke checks.
+- **DATABASE/REDIS INTEGRATION:** `pnpm test:integration:full`, requiring Docker Desktop.
+
 # Milestone 10 browser workflow
 
 Run the API and web app in development mode. Use a development Shopify store when testing publishing. Each checkbox is intentionally left unchecked until a human completes the action in a browser.
