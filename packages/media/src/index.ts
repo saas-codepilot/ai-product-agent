@@ -1,6 +1,7 @@
 const signatures:Record<string,string[]>= {'image/jpeg':['ffd8ff'],'image/png':['89504e47'],'image/webp':['52494646']};
 // @ts-ignore Optional runtime dependency is installed by the production/media workspace.
 import sharp from 'sharp';
+export { createPixelEmbedding, cosineSimilarity, extractPixelVisualClues, type PixelEmbedding, type PixelVisualClues } from './visual.ts';
 // @ts-ignore Optional production dependency is installed by the media workspace.
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 export interface MediaAsset {id:string;workspaceId:string;originalName:string;safeName:string;mimeType:string;size:number;width?:number;height?:number;storageKey:string;altText:string;}

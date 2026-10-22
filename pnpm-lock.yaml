@@ -107,6 +107,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@ai-product-agent/media':
+        specifier: workspace:*
+        version: link:../media
       '@ai-product-agent/types':
         specifier: workspace:*
         version: link:../types

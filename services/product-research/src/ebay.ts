@@ -1,0 +1,19 @@
+import type { Candidate, ProductClues } from '@ai-product-agent/types';
+import type { ResearchProvider } from './index.js';
+
+type EbaySearchResponse={total?:number,itemSummaries?:Array<{itemId?:string,title?:string,itemWebUrl?:string,image?:{imageUrl?:string},price?:{value?:string,currency?:string},seller?:{username?:string},condition?:string}>};
+export interface EbayProviderOptions { clientId?:string; clientSecret?:string; marketplaceId?:string; }
+
+export class EbayBrowseProvider implements ResearchProvider {
+ readonly name='ebay-browse';
+ readonly kind='official-api' as const;
+ private token?:{value:string;expiresAt:number};
+ private readonly options:EbayProviderOptions;
+ constructor(options:EbayProviderOptions){this.options=options;}
+ private async accessToken(){
+  if(!this.options.clientId||!this.options.clientSecret)throw new Error('eBay Browse provider requires EBAY_CLIENT_ID and EBAY_CLIENT_SECRET.');
+  if(this.token&&this.token.expiresAt>Date.now()+60000)return this.token.value;
+  const url='https://api.ebay.com/identity/v1/oauth2/token';let response:Response;try{response=await fetch(url,{method:'POST',headers:{authorization:`Basic ${Buffer.from(`${this.options.clientId}:${this.options.clientSecret}`).toString('base64')}`,'content-type':'application/x-www-form-urlencoded'},body:'grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope'});}catch(error){throw new Error(`eBay token request failed (${url}): ${error instanceof Error?error.message:String(error)}`);}if(!response.ok)throw new Error(`eBay token request failed (${response.status}) (${url})`);let data:any;try{data=await response.json();}catch{throw new Error(`eBay token response was malformed (${url})`);}if(typeof data?.access_token!=='string')throw new Error(`eBay token response was malformed (${url})`);this.token={value:data.access_token,expiresAt:Date.now()+Number(data.expires_in??7200)*1000};return this.token.value;
+ }
+ async search(clues:ProductClues,queryOverride?:string):Promise<Candidate[]> { const query=queryOverride??[clues.brand,clues.model,clues.productType,...clues.visibleText,...clues.distinctiveCharacteristics].filter(Boolean).join(' ').trim();if(!query)return [];const token=await this.accessToken();const params=new URLSearchParams({q:query,limit:'10'});const url=`https://api.ebay.com/buy/browse/v1/item_summary/search?${params}`;let response:Response;try{response=await fetch(url,{headers:{authorization:`Bearer ${token}`,'accept':'application/json','x-ebay-c-marketplace-id':this.options.marketplaceId??'EBAY_US'}});}catch(error){throw new Error(`eBay search request failed (${url}): ${error instanceof Error?error.message:String(error)}`);}if(!response.ok)throw new Error(`eBay search request failed (${response.status}) (${url})`);let data:EbaySearchResponse;try{data=await response.json() as EbaySearchResponse;}catch(error){throw new Error(`eBay search returned malformed JSON (${url}): ${error instanceof Error?error.message:String(error)}`);}if(data.itemSummaries!==undefined&&!Array.isArray(data.itemSummaries))throw new Error(`eBay search returned malformed response (${url})`);const items=data.itemSummaries??[];return items.filter(item=>item.itemId&&item.title&&item.itemWebUrl).map((item,index)=>({id:crypto.randomUUID(),title:item.title!,sourceName:'eBay',sourceUrl:item.itemWebUrl!,productUrl:item.itemWebUrl!,imageUrl:item.image?.imageUrl,price:item.price?.value===undefined?undefined:Number(item.price.value),currency:item.price?.currency,brand:undefined,specifications:{condition:item.condition??''},matchingSignals:[`Text clue search: ${query}`],confidence:Math.max(35,70-index*4),status:'verified',provider:this.name,providerProductId:item.itemId!,evidence:[{sourceName:'eBay',sourceUrl:item.itemWebUrl!,excerpt:item.title,capturedAt:new Date().toISOString()}]})); }
+}

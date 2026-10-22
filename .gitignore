@@ -7,3 +7,8 @@ test-results/
 .env.*
 !.env.example
 *.log
+
+# Local development files
+.local-bin/
+.pnpm-store/
+*.tsbuildinfo

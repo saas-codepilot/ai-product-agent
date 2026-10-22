@@ -130,6 +130,8 @@ model ResearchCandidate {
   provider String?
   providerProductId String?
   providerMetadata Json?
+  visualSimilarity Float?
+  matchMethod String?
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   researchJob ResearchJob @relation(fields: [researchJobId], references: [id], onDelete: Cascade)
   evidence Evidence[]

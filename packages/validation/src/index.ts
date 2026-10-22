@@ -11,5 +11,6 @@ export function validateImages(images: unknown): ProductImage[] {
   });
 }
 export function normalizeClues(input: Partial<ProductClues> = {}): ProductClues {
-  return { productType: input.productType?.trim(), brand: input.brand?.trim(), model: input.model?.trim(), visibleText: input.visibleText ?? [], colors: input.colors ?? [], materials: input.materials ?? [], distinctiveCharacteristics: input.distinctiveCharacteristics ?? [] };
+  return { productType: input.productType?.trim(), brand: input.brand?.trim(), model: input.model?.trim(), sourceUrl: input.sourceUrl?.trim(), visibleText: input.visibleText ?? [], colors: input.colors ?? [], materials: input.materials ?? [], distinctiveCharacteristics: input.distinctiveCharacteristics ?? [] };
 }
+export { extractProductMetadata, isPrivateHostname, validatePublicHttpUrl, type ImportedProductMetadata } from './url.ts';
