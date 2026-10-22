@@ -9,7 +9,7 @@ pnpm install
 pnpm dev
 ```
 
-The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. Without `DATABASE_URL`, the API uses an explicit development-only memory repository; with PostgreSQL configured it switches to Prisma persistence. Production startup rejects missing `DATABASE_URL`, enabled auth bypass, or missing `OPENAI_API_KEY`. The default research adapter is Wikimedia Commons, a public no-key source, and returns only normalized source-backed media results.
+The API runs on `http://localhost:4000` and the web app on `http://localhost:3000`. Without `DATABASE_URL`, the API uses an explicit development-only memory repository; with PostgreSQL configured it switches to Prisma persistence. Production startup rejects missing `DATABASE_URL`, enabled auth bypass, or missing `OPENAI_API_KEY`. The default research adapter is Wikimedia Commons, a public no-key source, and returns only normalized source-backed media results. See [runtime and test infrastructure](docs/architecture/testing.md) for fallback, Playwright, Docker, and known sandbox behavior.
 
 ## PostgreSQL
 

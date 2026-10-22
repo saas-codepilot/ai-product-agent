@@ -2,6 +2,22 @@
 
 ## Automated/runtime execution record — 2026-10-01
 
+## Milestone 13 execution record — 2026-10-22
+
+Commands and outcomes:
+
+- `pnpm --filter @ai-product-agent/web dev` — **BLOCKED**: Next.js `spawn EPERM` from `next-dev.js`.
+- `node -e 'child_process.spawnSync(process.execPath, ...)'` — **BLOCKED**: minimal child-process reproduction returned `spawnSync ... node.exe EPERM`, proving the restriction is below Next.js.
+- `pnpm test:e2e` — **BLOCKED** before test collection: Playwright web server startup received `spawn EPERM`.
+- `pnpm test` — **PASS**: contract tests passed.
+- Direct `node typescript/lib/tsc.js --noEmit -p ...` for 10 configured projects — **PASS**.
+- `pnpm typecheck` — **BLOCKED**: pnpm’s recursive runner received `spawn EPERM` while launching package checks; direct checks passed.
+- `pnpm test:integration` — **BLOCKED**: `DATABASE_URL` and `REDIS_URL` absent.
+- `pnpm test:integration:full` — **BLOCKED**: Docker unavailable; command exits 2 with an explicit environment message.
+- `node tests/runtime-check.mjs` — **BLOCKED** while services are stopped: API and web fetches failed.
+
+No project-level fix was applied to Next.js because the same child-process failure reproduces outside Next.js. No Docker, PostgreSQL, or Redis installation was attempted.
+
 - **PASS** API registration issued an `HttpOnly` session cookie; invalid login returned `401` without sensitive detail.
 - **PASS** API logout invalidated the session; `/api/auth/me` returned `401` afterward.
 - **PASS** API product creation and deterministic development AI analysis completed.
